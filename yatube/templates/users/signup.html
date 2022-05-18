@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Зарегистрироваться{% endblock %}
+{% block content %}
+  <div class="container py-5">
+    {% load user_filters %}
+    {% url 'users:signup' as the_url %}
+    {% include 'includes/form.html' with card_title='Зарегистрироваться' action_url=the_url button_text='Сохранить' %}
+  </div>
+{% endblock %}
