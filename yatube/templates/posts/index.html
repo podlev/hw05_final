@@ -1,12 +1,15 @@
 {% extends 'base.html' %}
+{% load cache %}
 {% block title %}Это главная страница проекта Yatube{% endblock %}
 {% block content %}
-  <div class="container py-5">
-    <h1>Последние обновления на сайте</h1>
-      {% include 'includes/posts/switcher.html' with index=True %}
-      {% for post in page_obj %}
-        {% include 'includes/posts/article.html' %}
-      {% endfor %}
-      {% include 'includes/posts/paginator.html' %}
-  </div>
+  {% cache 20 index_page %}
+    <div class="container py-5">
+      <h1>Последние обновления на сайте</h1>
+        {% include 'includes/posts/switcher.html' with index=True %}
+        {% for post in page_obj %}
+          {% include 'includes/posts/article.html' %}
+        {% endfor %}
+        {% include 'includes/posts/paginator.html' %}
+    </div>
+  {% endcache %}
 {% endblock %}

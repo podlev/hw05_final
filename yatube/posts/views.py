@@ -1,13 +1,11 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.cache import cache_page
 
 from .forms import CommentForm, PostForm
 from .models import Group, Follow, Post, User
 from .utils import get_page_obj
 
 
-@cache_page(200, key_prefix='index_page')
 def index(request):
     post_list = Post.objects.select_related('group', 'author').all()
     page_obj = get_page_obj(request, post_list)
