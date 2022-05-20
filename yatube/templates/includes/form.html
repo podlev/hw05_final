@@ -23,14 +23,14 @@
                 {% endif %}
               </div>
             {% endfor %}
-              <div class="row my-3 p-3 justify-center">
-                <button type="submit" class="btn btn-primary">
-                  {{ button_text }}
-                </button>
-                {% if password_reset %}
-                  <a href={{password_reset}} class="btn btn-link">Забыли пароль?</a>
-                {% endif %}
-              </div>
+            <div class="row my-3 p-3 justify-center">
+              <button type="submit" class="btn btn-primary">
+                {{ button_text }}
+              </button>
+              {% if password_reset %}
+                <a href={{password_reset}} class="btn btn-link">Забыли пароль?</a>
+              {% endif %}
+            </div>
           </form>
       </div>
     </div>

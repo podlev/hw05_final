@@ -4,11 +4,11 @@
   <div class="container py-5">
     <h1>{{ group.title }}</h1>
     <p> 
-      {{ group.description }}
+      {{ group.description|linebreaksbr }}
     </p> 
     {% for post in page_obj %}
-      {% include 'includes/article.html' %}
+      {% include 'includes/posts/article.html' %}
     {% endfor %}
-    {% include 'includes/paginator.html' %}
+    {% include 'includes/posts/paginator.html' %}
   </div>
 {% endblock %}

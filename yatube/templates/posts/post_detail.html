@@ -35,7 +35,7 @@
           {% url 'posts:add_comment' post.id as the_url %}
           {% include 'includes/form.html' with card_title='Добавить комментарий' action_url=the_url button_text='Добавить' %}
         {% endif %}
-        {% include 'includes/comments.html' %}
+        {% include 'includes/posts/comments.html' %}
       </article>
     </div>
   </div>

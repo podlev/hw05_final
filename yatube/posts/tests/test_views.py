@@ -108,21 +108,20 @@ class PostContextTest(TestCase):
         }
 
         for url, keyword in page_context_names.items():
-            response = self.author_client.get(url)
-            if keyword == 'page_obj':
-                obj = response.context[keyword][0]
-            else:
-                obj = response.context[keyword]
-            post_context_names = {
-                obj.text: self.post.text,
-                obj.group: self.post.group,
-                obj.author: self.post.author,
-                obj.image: self.post.image,
-                obj.comments.get(): self.comment
-            }
-            for post_context, test_context in post_context_names.items():
-                with self.subTest(post_context=post_context,
-                                  test_context=test_context):
+            with self.subTest(url=url, keyword=keyword):
+                response = self.author_client.get(url)
+                if keyword == 'page_obj':
+                    obj = response.context[keyword][0]
+                else:
+                    obj = response.context[keyword]
+                post_context_names = {
+                    obj.text: self.post.text,
+                    obj.group: self.post.group,
+                    obj.author: self.post.author,
+                    obj.image: self.post.image,
+                    obj.comments.get(): self.comment
+                }
+                for post_context, test_context in post_context_names.items():
                     self.assertEqual(post_context, test_context)
 
 
@@ -144,7 +143,8 @@ class PostCreateUpdateTest(TestCase):
         )
         cls.form_fields = {
             'text': forms.fields.CharField,
-            'group': forms.fields.ChoiceField
+            'group': forms.fields.ChoiceField,
+            'image': forms.fields.ImageField
         }
 
     def setUp(self):
@@ -320,7 +320,7 @@ class CacheTest(TestCase):
         в кеше и обновляется раз в 20 секунд ."""
         response = self.client.get(reverse('posts:index'))
         self.assertContains(response, self.post.text)
-        Post.objects.filter(text=self.post.text).delete()
+        Post.objects.get(pk=self.post.pk).delete()
         response = self.client.get(reverse('posts:index'))
         self.assertContains(response, self.post.text)
         cache.clear()

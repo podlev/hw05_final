@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -22,7 +24,6 @@ class PostURLTests(TestCase):
         )
 
     def setUp(self):
-        self.guest_client = Client()
         self.authorized_client = Client()
         self.author_client = Client()
         self.authorized_client.force_login(self.user)
@@ -41,41 +42,47 @@ class PostURLTests(TestCase):
             reverse('posts:post_detail', args=(self.post.pk,))]
         for url in guest_url_names:
             with self.subTest(url=url):
-                response = self.guest_client.get(url)
-                self.assertEqual(response.status_code, 200)
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
 
-    def test_post_edit_url_not_available_to_not_authorized_user(self):
+    def test_url_available_to_autorized_users(self):
+        """Страницы по адресам /posts/post_id/comment/, /create/
+        доступны авторизованным пользователям.
+        """
+        urls_status_names = {
+            reverse('posts:add_comment',
+                    args=(self.post.pk,)): self.authorized_client,
+            reverse('posts:post_create'): self.authorized_client
+        }
+        for url, client in urls_status_names.items():
+            with self.subTest(url=url, client=client):
+                response = client.get(url, follow=True)
+                self.assertEqual(response.status_code, HTTPStatus.OK)
+
+    def test_url_not_available_to_not_autorized_users(self):
+        """Страницы по адресам /posts/post_id/edit/,
+        /posts/post_id/comment/, /create/
+        недоступны неавторизованным пользователям.
+        """
+        urls_redirects_names = {
+            reverse('posts:post_update', args=(self.post.pk,)):
+            f'/auth/login/?next=/posts/{self.post.pk}/edit/',
+            reverse('posts:add_comment', args=(self.post.pk,)):
+            f'/auth/login/?next=/posts/{self.post.pk}/comment/',
+            reverse('posts:post_create'): '/auth/login/?next=/create/'
+        }
+        for url, url_redirect in urls_redirects_names.items():
+            with self.subTest(url=url, url_redirect=url_redirect):
+                response = self.client.get(url, follow=True)
+                self.assertRedirects(response, url_redirect)
+
+    def test_post_edit_url_available_to_author(self):
         """Страница по адресу /posts/post_id/edit/
-        перенаправит неавторизованного пользователя
-        на auth/login/?next=/posts/post_id/edit/.
+        доступна автору.
         """
-        response = self.guest_client.get(
-            reverse('posts:post_update', args=(self.post.pk,)),
-            follow=True)
-        self.assertRedirects(response,
-                             f'/auth/login/?next=/posts/{self.post.pk}/edit/')
-
-    def test_comment_url_not_available_to_not_authorized_user(self):
-        """Переход по адресу /posts/post_id/comment/
-        перенаправит неавторизованного пользователя
-        на auth/login/?next=/posts/post_id/comment/.
-        """
-        response = self.guest_client.get(
-            reverse('posts:add_comment', args=(self.post.pk,)),
-            follow=True)
-        self.assertRedirects(
-            response,
-            f'/auth/login/?next=/posts/{self.post.pk}/comment/'
-        )
-
-    def test_comment_url_available_to_authorized_user(self):
-        """Страница по адресу /posts/post_id/comment/
-        доступна авторизованному пользователю.
-        """
-        response = self.client.get(
-            reverse('posts:add_comment', args=(self.post.pk,)),
-            follow=True)
-        self.assertEqual(response.status_code, 200)
+        response = self.author_client.get(
+            reverse('posts:post_update', args=(self.post.pk,)))
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_post_edit_url_not_available_to_not_author(self):
         """Страница по адресу /posts/post_id/edit/
@@ -87,34 +94,10 @@ class PostURLTests(TestCase):
             follow=True)
         self.assertRedirects(response, f'/posts/{self.post.pk}/')
 
-    def test_post_edit_url_available_to_author(self):
-        """Страница по адресу /posts/post_id/edit/
-        доступна автору.
-        """
-        response = self.author_client.get(
-            reverse('posts:post_update', args=(self.post.pk,)))
-        self.assertEqual(response.status_code, 200)
-
-    def test_post_create_url_not_available_to_not_authorized_user(self):
-        """Страница по адресу /posts/post_id/
-        перенаправит неавторизованного пользователя
-        на /auth/login/?next=/create/.
-        """
-        response = self.guest_client.get(
-            reverse('posts:post_create'), follow=True)
-        self.assertRedirects(response, '/auth/login/?next=/create/')
-
-    def test_post_create_url_available_to_authorized_user(self):
-        """Страница по адресу /posts/post_id/
-        доступна авторизованному пользователю.
-        """
-        response = self.authorized_client.get(reverse('posts:post_create'))
-        self.assertEqual(response.status_code, 200)
-
     def test_unexisting_page_return_404(self):
         """Страница по несуществующему адресу возвращает 404."""
-        response = self.guest_client.get('/unexisting_page/')
-        self.assertEqual(response.status_code, 404)
+        response = self.client.get('/unexisting_page/')
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""

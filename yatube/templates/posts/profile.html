@@ -18,8 +18,8 @@
       {% endif %}
     </div>
     {% for post in page_obj %}
-      {% include 'includes/article.html' %}
+      {% include 'includes/posts/article.html' %}
     {% endfor %}
-    {% include 'includes/paginator.html' %}
+    {% include 'includes/posts/paginator.html' %}
   </div>
 {% endblock %}
